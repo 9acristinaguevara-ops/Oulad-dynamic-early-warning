@@ -1,19 +1,5 @@
-# Datos originales y derivados
-data/raw/downloads/*
-data/raw/csv/*
-data/interim/*
-data/processed/*
-outputs/figures/*
-outputs/tables/*
-outputs/logs/*
-!data/raw/downloads/.gitkeep
-!data/raw/csv/.gitkeep
-!data/interim/.gitkeep
-!data/processed/.gitkeep
-!outputs/figures/.gitkeep
-!outputs/tables/.gitkeep
-!outputs/logs/.gitkeep
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-.env
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
