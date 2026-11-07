@@ -1,0 +1,10 @@
+COMPARACION DE MODELOS - SEMANA 4
+Total de registros: 27135
+Entrenamiento: 21725
+Prueba: 5410
+Estudiantes en entrenamiento: 19656
+Estudiantes en prueba: 4915
+
+             modelo  accuracy  precision   recall       f1  roc_auc
+Regresion_Logistica  0.505360   0.201441 0.627137 0.304935 0.571108
+      Random_Forest  0.554898   0.189713 0.480769 0.272068 0.548377

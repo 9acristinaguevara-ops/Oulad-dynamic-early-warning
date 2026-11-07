@@ -1,0 +1,16 @@
+CONJUNTO DE PREDICCION PROSPECTIVA
+
+                         categoria  cantidad
+               Registros iniciales     21661
+Retiradas antes o durante semana 4        52
+     Fecha de retirada desconocida     17761
+             Estudiantes elegibles      3848
+     Retirada posterior a semana 4      3823
+ Sin retirada posterior registrada        25
+
+Distribucion del objetivo:
+target_future_withdrawal
+0      25
+1    3823
+
+Limitacion: el conjunto inicial contiene solamente estudiantes con actividad registrada en la semana 4. Por ello, no representa necesariamente a todos los estudiantes inscritos en ese momento.

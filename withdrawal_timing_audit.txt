@@ -1,0 +1,11 @@
+AUDITORIA TEMPORAL DE RETIRADAS
+Semana de corte: 4
+Casos Withdrawn revisados: 3906
+
+           withdrawal_timing  cantidad
+Retirada después de semana 4      3822
+Retirada en semana 4 o antes        51
+              No determinado        27
+     Sin retirada registrada         6
+
+Nota: date_unregistration es una semana relativa al inicio del curso. Se debe comprobar que la retirada ocurra después del punto de alerta para definir un objetivo de predicción futura.

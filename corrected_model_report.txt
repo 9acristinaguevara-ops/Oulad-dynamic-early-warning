@@ -1,0 +1,37 @@
+COMPARACION DE MODELOS CORREGIDOS
+Entrenamiento: 14854 registros
+Prueba: 3194 registros
+Estudiantes compartidos: 0
+
+
+Modelo: Referencia mayoritaria
+Accuracy: 0.8322
+Precision: 0.0000
+Recall: 0.0000
+F1: 0.0000
+ROC-AUC: 0.5000
+Matriz de confusion:
+[[2658    0]
+ [ 536    0]]
+
+
+Modelo: Regresion logistica
+Accuracy: 0.4828
+Precision: 0.1847
+Recall: 0.6101
+F1: 0.2836
+ROC-AUC: 0.5502
+Matriz de confusion:
+[[1215 1443]
+ [ 209  327]]
+
+
+Modelo: Random Forest
+Accuracy: 0.7292
+Precision: 0.2036
+Recall: 0.2108
+F1: 0.2071
+ROC-AUC: 0.5320
+Matriz de confusion:
+[[2216  442]
+ [ 423  113]]
