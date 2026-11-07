@@ -1,0 +1,11 @@
+AUDITORIA DE INSCRIPCIONES Y RESULTADOS
+
+final_result                   Distinction  Fail   Pass  Withdrawn    All
+grupo_retirada                                                           
+Con retirada registrada                  0     7      0       7387   7394
+Fecha desconocida                     3024  7043  12361         93  22521
+Fecha negativa distinta de -1            0     2      0       2529   2531
+Sin retirada registrada                  0     0      0        147    147
+All                                   3024  7052  12361      10156  32593
+
+Cantidad de fechas desconocidas: 22521

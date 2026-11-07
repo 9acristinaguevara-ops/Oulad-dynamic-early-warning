@@ -1,0 +1,3 @@
+target_future_withdrawal,estudiantes,media_disminuciones,mediana_disminuciones,media_aumentos,mediana_aumentos,media_persistencia,mediana_persistencia,media_recuperaciones,mediana_recuperaciones,media_tasa_persistencia,grupo_resultado
+0,12988,2.1140283338466275,2.0,1.8499384046812442,2.0,0.5892362180474284,0.0,0.9785956267323683,1.0,0.19641207268247612,No abandono
+1,2329,2.0957492486045513,2.0,1.866895663374839,2.0,0.5646200085873766,0.0,0.9682267067410906,1.0,0.18820666952912551,Abandono futuro

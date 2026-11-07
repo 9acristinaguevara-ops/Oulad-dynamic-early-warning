@@ -1,0 +1,38 @@
+PRIMER MODELO: RANDOM FOREST
+
+Punto de observación: semana 4
+Separación: por identificador de estudiante
+
+Métricas:
+  metrica    valor
+ accuracy 0.694489
+precision 0.208145
+   recall 0.224390
+       f1 0.215962
+  roc_auc 0.532469
+
+Matriz de confusión (filas reales, columnas predichas):
+[[2853  700]
+ [ 636  184]]
+
+Reporte de clasificación:
+              precision    recall  f1-score   support
+
+No Withdrawn       0.82      0.80      0.81      3553
+   Withdrawn       0.21      0.22      0.22       820
+
+    accuracy                           0.69      4373
+   macro avg       0.51      0.51      0.51      4373
+weighted avg       0.70      0.69      0.70      4373
+
+
+Importancia de variables:
+          variable  importancia
+     weekly_change     0.379591
+     weekly_clicks     0.324410
+  activity_records     0.214524
+       active_days     0.068652
+activity_decreased     0.006808
+ has_previous_week     0.006015
+
+Advertencia: las importancias no demuestran causalidad. Este es un modelo inicial y no una validación definitiva de un sistema de alerta temprana.

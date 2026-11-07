@@ -1,0 +1,29 @@
+ANÁLISIS EXPLORATORIO DE OULAD
+=============================================
+Filas de actividad semanal: 627031
+Estudiantes únicos: 26074
+Módulos: 7
+Presentaciones: 22
+Semanas mínima y máxima: -4 a 38
+Duplicados estudiante-módulo-presentación-semana: 0
+Registros sin resultado final asociado: 0
+Registros sin correspondencia en studentInfo: 0
+
+ESTADÍSTICAS DESCRIPTIVAS
+       weekly_clicks  active_days  activity_records
+count      627031.00    627031.00         627031.00
+mean           63.16         2.88             16.99
+std            96.59         1.80             17.04
+min             1.00         1.00              1.00
+25%             9.00         1.00              5.00
+50%            30.00         2.00             12.00
+75%            78.00         4.00             24.00
+max          6999.00         7.00            321.00
+
+RESULTADOS FINALES
+final_result
+Pass           12361
+Withdrawn      10156
+Fail            7052
+Distinction     3024
+Name: count, dtype: int64

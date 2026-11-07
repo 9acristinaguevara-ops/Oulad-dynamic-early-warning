@@ -1,0 +1,17 @@
+CONJUNTO CON SEMANA FIJA
+Semana de corte: 4
+Total de observaciones: 21661
+Withdrawn: 3906
+No Withdrawn: 17755
+Porcentaje Withdrawn: 18.03%
+
+Variables candidatas:
+weekly_clicks
+active_days
+activity_records
+has_previous_week
+weekly_change
+activity_decreased
+
+Limitacion: solo incluye estudiantes con actividad registrada en la semana 4.
+No representa necesariamente a todos los estudiantes matriculados.
