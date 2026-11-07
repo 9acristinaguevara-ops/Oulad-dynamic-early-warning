@@ -1,9 +1,0 @@
-[OK] assessments.csv | 0.0 MB | columnas: 6
-[OK] courses.csv | 0.0 MB | columnas: 3
-[OK] studentAssessment.csv | 5.4 MB | columnas: 5
-[OK] studentInfo.csv | 3.3 MB | columnas: 12
-[OK] studentRegistration.csv | 1.1 MB | columnas: 5
-[OK] studentVle.csv | 432.8 MB | columnas: 6
-[OK] vle.csv | 0.3 MB | columnas: 6
-
-Resultado: CSV requeridos encontrados

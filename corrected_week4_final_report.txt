@@ -1,5 +1,0 @@
-CONJUNTO CORREGIDO DE SEMANA 4
-Total de matrículas elegibles: 27135
-Retiradas futuras: 4725
-Sin retirada futura: 22410
-Sin actividad registrada en semana 4: 5906
