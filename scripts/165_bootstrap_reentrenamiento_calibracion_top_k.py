@@ -314,7 +314,6 @@ def main():
             fila["replicas_validas_" + metrica] = n
 
         dist_f1 = distribuciones["f1"]
-        fila["f1_diferencia_observada_referencia"] = float(np.mean(dist_f1))
         filas.append(fila)
 
     resultados = pd.DataFrame(filas)
