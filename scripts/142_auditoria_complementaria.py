@@ -12,6 +12,7 @@ Ejecutar desde la raíz del repositorio:
 
 from pathlib import Path
 import platform
+import zipfile
 import pandas as pd
 import numpy as np
 import sklearn
@@ -881,12 +882,23 @@ def main():
     save(pd.DataFrame(summary), "142_resumen_ejecutivo.csv")
     save(pd.DataFrame(checks), "142_estado_controles.csv")
 
+    # Comprimir todos los informes para que se puedan compartir en un solo archivo.
+    zip_path = BASE / "outputs" / "audit_142.zip"
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for file_path in OUT.rglob("*"):
+            if file_path.is_file():
+                archive.write(
+                    file_path,
+                    arcname=str(file_path.relative_to(BASE / "outputs"))
+                )
+
     print("\nAUDITORÍA 142 FINALIZADA")
     print("Matrículas elegibles reconstruidas:", len(eligible))
     print("Dataset combinado:", len(combined))
     print("Panel reconstruido:", len(rebuilt_panel))
     print("Controles:", len(checks))
     print("Resultados guardados en:", OUT)
+    print("Informe comprimido:", zip_path)
     print("IMPORTANTE: revisar 142_estado_controles.csv y los archivos de discrepancias.")
 
 
