@@ -14,6 +14,7 @@ from pathlib import Path
 import platform
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 BASE = Path(__file__).resolve().parents[1]
 RAW = BASE / "data" / "raw" / "csv"
@@ -426,7 +427,54 @@ def main():
         "El valor esperado procede de los experimentos 132 y 138."
     )
 
-    # F. Comparar panel reconstruido con el utilizado en los análisis 130-141.
+    # F. Auditar solapamiento de personas entre periodos y dentro de 2013J.
+    # El split original de 2013J se replica con el mismo random_state y
+    # estratificación usados en los scripts 107-114.
+    period_data = combined.copy()
+    period_data["id_student"] = period_data["id_student"].astype(str)
+
+    train_period = period_data[period_data["code_presentation"] == "2013B"]
+    validation_period = period_data[period_data["code_presentation"] == "2013J"]
+    test_b_period = period_data[period_data["code_presentation"] == "2014B"]
+    test_j_period = period_data[period_data["code_presentation"] == "2014J"]
+
+    calibration_period, threshold_period = train_test_split(
+        validation_period,
+        test_size=0.5,
+        random_state=42,
+        stratify=validation_period["target_future_withdrawal"]
+    )
+
+    id_sets = {
+        "train_2013B": set(train_period["id_student"]),
+        "calibracion_2013J": set(calibration_period["id_student"]),
+        "seleccion_umbral_2013J": set(threshold_period["id_student"]),
+        "test_2014B": set(test_b_period["id_student"]),
+        "test_2014J": set(test_j_period["id_student"])
+    }
+
+    overlap_pairs = [
+        ("calibracion_vs_seleccion_2013J", "calibracion_2013J", "seleccion_umbral_2013J"),
+        ("test_2014B_vs_train_2013B", "test_2014B", "train_2013B"),
+        ("test_2014B_vs_calibracion_2013J", "test_2014B", "calibracion_2013J"),
+        ("test_2014B_vs_seleccion_umbral_2013J", "test_2014B", "seleccion_umbral_2013J"),
+        ("test_2014J_vs_train_2013B", "test_2014J", "train_2013B"),
+        ("test_2014J_vs_calibracion_2013J", "test_2014J", "calibracion_2013J"),
+        ("test_2014J_vs_seleccion_umbral_2013J", "test_2014J", "seleccion_umbral_2013J"),
+        ("test_2014B_vs_test_2014J", "test_2014B", "test_2014J")
+    ]
+
+    overlap_rows = []
+    for name, left, right in overlap_pairs:
+        shared = id_sets[left].intersection(id_sets[right])
+        overlap_rows.append({
+            "comparacion": name,
+            "personas_compartidas": len(shared),
+            "ids_compartidos": ";".join(sorted(shared))
+        })
+    save(pd.DataFrame(overlap_rows), "142_solapamiento_estudiantes_periodos.csv")
+
+    # G. Comparar panel reconstruido con el utilizado en los análisis 130-141.
     if files["panel"].exists():
         old_panel = pd.read_parquet(files["panel"])
         require_columns(old_panel, KEYS + ["target_future_withdrawal"] +
@@ -471,7 +519,7 @@ def main():
         add_check(checks, "panel_existente_disponible", 0, "NO DISPONIBLE",
                   "No se encontró weekly_panel_weeks0_4.parquet; se reconstruyó desde sus fuentes.")
 
-    # G. Evaluaciones programadas: comprobar si es constante en cada grupo.
+    # H. Evaluaciones programadas: comprobar si es constante en cada grupo.
     if "evaluaciones_programadas_34" in combined.columns:
         course_context = (
             combined.groupby(["code_module", "code_presentation"])
@@ -485,7 +533,7 @@ def main():
         course_context["constante_en_grupo"] = course_context["valores_distintos"] == 1
         save(course_context, "142_constancia_evaluaciones_programadas.csv")
 
-    # H. Resumen reproducible y estado general.
+    # I. Resumen reproducible y estado general.
     summary = [
         {"control": "matriculas_elegibles_reconstruidas", "valor": len(eligible)},
         {"control": "matriculas_dataset_corregido", "valor": len(corrected)},
