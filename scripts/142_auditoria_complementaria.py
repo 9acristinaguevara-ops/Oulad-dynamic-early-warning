@@ -65,6 +65,8 @@ def main():
 
     files = {
         "student_vle": RAW / "studentVle.csv",
+        "student_assessment": RAW / "studentAssessment.csv",
+        "assessments": RAW / "assessments.csv",
         "registration": RAW / "studentRegistration.csv",
         "student_info": RAW / "studentInfo.csv",
         "weekly_activity": INTERIM / "weekly_activity.parquet",
@@ -75,7 +77,8 @@ def main():
         "panel": INTERIM / "weekly_panel_weeks0_4.parquet",
     }
 
-    required = ["student_vle", "registration", "student_info", "weekly_activity",
+    required = ["student_vle", "student_assessment", "assessments",
+                "registration", "student_info", "weekly_activity",
                 "corrected", "enriched", "assessment_features", "combined"]
     missing_files = [str(files[k]) for k in required if not files[k].exists()]
     if missing_files:
@@ -86,6 +89,8 @@ def main():
 
     registration = pd.read_csv(files["registration"], na_values=["?"])
     student_info = pd.read_csv(files["student_info"])
+    student_assessment = pd.read_csv(files["student_assessment"])
+    assessments = pd.read_csv(files["assessments"])
     weekly = pd.read_parquet(files["weekly_activity"])
     corrected = pd.read_parquet(files["corrected"])
     enriched = pd.read_parquet(files["enriched"])
@@ -95,6 +100,12 @@ def main():
     require_columns(registration, KEYS + ["date_registration", "date_unregistration"],
                     "studentRegistration.csv")
     require_columns(student_info, KEYS + ["final_result"], "studentInfo.csv")
+    require_columns(student_assessment,
+                    ["id_assessment", "id_student", "date_submitted", "is_banked", "score"],
+                    "studentAssessment.csv")
+    require_columns(assessments,
+                    ["id_assessment", "code_module", "code_presentation", "date"],
+                    "assessments.csv")
     require_columns(weekly, KEYS + ["week", "weekly_clicks", "active_days",
                                     "activity_records"], "weekly_activity.parquet")
     require_columns(corrected, KEYS + ["target_future_withdrawal"],
@@ -136,6 +147,122 @@ def main():
                   int(frame.duplicated(key_cols).sum()),
                   "OK" if not frame.duplicated(key_cols).any() else "ERROR")
     save(pd.DataFrame(integrity), "142_integridad_archivos.csv")
+
+    # Reconstruir las variables de evaluación desde studentAssessment y assessments.
+    assessments["date"] = pd.to_numeric(assessments["date"], errors="coerce")
+    student_assessment["date_submitted"] = pd.to_numeric(
+        student_assessment["date_submitted"], errors="coerce"
+    )
+    student_assessment["score"] = pd.to_numeric(
+        student_assessment["score"], errors="coerce"
+    )
+    banked_flag = pd.to_numeric(student_assessment["is_banked"], errors="coerce")
+    non_banked = student_assessment[banked_flag == 0].copy()
+
+    assessment_join = non_banked.merge(
+        assessments[["id_assessment", "date"]],
+        on="id_assessment", how="left",
+        validate="many_to_one", indicator=True
+    )
+    unmatched_assessment_ids = int((assessment_join["_merge"] == "left_only").sum())
+    add_check(
+        checks, "entregas_sin_id_assessment_en_assessments",
+        unmatched_assessment_ids,
+        "OK" if unmatched_assessment_ids == 0 else "REVISAR"
+    )
+
+    scheduled_assessments = assessments[
+        assessments["date"].notna() & (assessments["date"] <= 34)
+    ]
+    scheduled_counts = (
+        scheduled_assessments.groupby(
+            ["code_module", "code_presentation"]
+        )["id_assessment"].count().reset_index()
+        .rename(columns={"id_assessment": "evaluaciones_programadas_34"})
+    )
+
+    early_submissions = assessment_join[
+        assessment_join["date_submitted"].notna()
+        & (assessment_join["date_submitted"] <= 34)
+    ].copy()
+    early_scheduled_submissions = early_submissions[
+        early_submissions["date"].notna()
+        & (early_submissions["date"] <= 34)
+    ].copy()
+
+    delivered_features = (
+        early_scheduled_submissions.groupby(KEYS)
+        .agg(
+            evaluaciones_entregadas_34=("id_assessment", "nunique"),
+            promedio_notas_34=("score", "mean"),
+            evaluaciones_aprobadas_34=("score", lambda values: (values >= 40).sum())
+        ).reset_index()
+    )
+    early_total_features = (
+        early_submissions.groupby(KEYS)["id_assessment"].nunique()
+        .reset_index()
+        .rename(columns={"id_assessment": "entregas_tempranas_totales"})
+    )
+
+    expected_assessment = corrected[KEYS].merge(
+        scheduled_counts, on=["code_module", "code_presentation"],
+        how="left", validate="many_to_one"
+    )
+    expected_assessment = expected_assessment.merge(
+        delivered_features, on=KEYS, how="left", validate="one_to_one"
+    )
+    expected_assessment = expected_assessment.merge(
+        early_total_features, on=KEYS, how="left", validate="one_to_one"
+    )
+    for col in [
+        "evaluaciones_programadas_34",
+        "evaluaciones_entregadas_34",
+        "evaluaciones_aprobadas_34",
+        "entregas_tempranas_totales"
+    ]:
+        expected_assessment[col] = expected_assessment[col].fillna(0)
+    expected_assessment["proporcion_entregadas_34"] = 0.0
+    has_scheduled = expected_assessment["evaluaciones_programadas_34"] > 0
+    expected_assessment.loc[has_scheduled, "proporcion_entregadas_34"] = (
+        expected_assessment.loc[has_scheduled, "evaluaciones_entregadas_34"]
+        / expected_assessment.loc[has_scheduled, "evaluaciones_programadas_34"]
+    )
+
+    assessment_compare = expected_assessment.merge(
+        assessment_features[KEYS + assessment_columns],
+        on=KEYS, how="outer",
+        suffixes=("_reconstruido", "_existente"),
+        indicator=True, validate="one_to_one"
+    )
+    assessment_rows = []
+    both_assessment = assessment_compare[assessment_compare["_merge"] == "both"]
+    for col in assessment_columns:
+        left_values = both_assessment[f"{col}_reconstruido"]
+        right_values = both_assessment[f"{col}_existente"]
+        same = left_values.eq(right_values) | (
+            left_values.isna() & right_values.isna()
+        )
+        assessment_rows.append({
+            "variable": col,
+            "comparaciones": len(both_assessment),
+            "coincidencias": int(same.sum()),
+            "diferencias": int((~same).sum())
+        })
+    assessment_key_diff = int((assessment_compare["_merge"] != "both").sum())
+    save(pd.DataFrame(assessment_rows), "142_comparacion_features_evaluaciones.csv")
+    save(assessment_compare[assessment_compare["_merge"] != "both"],
+         "142_discrepancias_features_evaluaciones.csv")
+    add_check(
+        checks, "claves_features_evaluaciones_no_coincidentes",
+        assessment_key_diff,
+        "OK" if assessment_key_diff == 0 else "ERROR"
+    )
+    for item in assessment_rows:
+        add_check(
+            checks, f"diferencias_feature_evaluacion_{item['variable']}",
+            item["diferencias"],
+            "OK" if item["diferencias"] == 0 else "ERROR"
+        )
 
     # Reconstruir las variables de actividad de los scripts 23 y 25
     # directamente desde weekly_activity y comprobarlas contra enriched.
