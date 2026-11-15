@@ -62,6 +62,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
     files = {
+        "student_vle": RAW / "studentVle.csv",
         "registration": RAW / "studentRegistration.csv",
         "student_info": RAW / "studentInfo.csv",
         "weekly_activity": INTERIM / "weekly_activity.parquet",
@@ -70,7 +71,7 @@ def main():
         "panel": INTERIM / "weekly_panel_weeks0_4.parquet",
     }
 
-    required = ["registration", "student_info", "weekly_activity",
+    required = ["student_vle", "registration", "student_info", "weekly_activity",
                 "corrected", "combined"]
     missing_files = [str(files[k]) for k in required if not files[k].exists()]
     if missing_files:
@@ -253,6 +254,68 @@ def main():
         {"control": "semanas_max", "registros": int(weekly["week"].max())},
     ])
     save(pd.DataFrame(weekly_checks), "142_validacion_weekly_activity.csv")
+
+    # D. Reconstrucción de weekly_activity desde el studentVle original.
+    # Se procesa por bloques para no cargar los 10.6 millones de registros
+    # originales completos en memoria.
+    raw_partials = []
+    raw_columns = KEYS + ["date", "sum_click"]
+    for chunk in pd.read_csv(
+        files["student_vle"], usecols=raw_columns, chunksize=750000
+    ):
+        chunk["week"] = (chunk["date"] // 7).astype("int32")
+        partial = (
+            chunk.groupby(KEYS + ["week"], as_index=False)
+            .agg(
+                weekly_clicks=("sum_click", "sum"),
+                activity_records=("sum_click", "size"),
+                observed_dates=("date", lambda values: tuple(pd.unique(values)))
+            )
+        )
+        raw_partials.append(partial)
+
+    raw_grouped = pd.concat(raw_partials, ignore_index=True)
+    raw_weekly = (
+        raw_grouped.groupby(KEYS + ["week"], as_index=False)
+        .agg(
+            weekly_clicks=("weekly_clicks", "sum"),
+            activity_records=("activity_records", "sum"),
+            active_days=("observed_dates",
+                         lambda values: len(set().union(*values)))
+        )
+    )
+
+    raw_comparison = raw_weekly.merge(
+        weekly[KEYS + ["week", "weekly_clicks", "active_days", "activity_records"]],
+        on=KEYS + ["week"], how="outer",
+        suffixes=("_raw", "_parquet"), indicator=True,
+        validate="one_to_one"
+    )
+    raw_diff_rows = []
+    raw_both = raw_comparison[raw_comparison["_merge"] == "both"]
+    for col in ["weekly_clicks", "active_days", "activity_records"]:
+        a = raw_both[f"{col}_raw"]
+        b = raw_both[f"{col}_parquet"]
+        same = a.eq(b) | (a.isna() & b.isna())
+        raw_diff_rows.append({
+            "variable": col,
+            "coincidencias": int(same.sum()),
+            "diferencias": int((~same).sum())
+        })
+    raw_key_diff = int((raw_comparison["_merge"] != "both").sum())
+    save(raw_comparison[raw_comparison["_merge"] != "both"],
+         "142_discrepancias_claves_raw_vs_weekly.csv")
+    save(pd.DataFrame(raw_diff_rows), "142_comparacion_raw_vs_weekly.csv")
+    add_check(
+        checks, "claves_raw_vs_weekly_no_coincidentes", raw_key_diff,
+        "OK" if raw_key_diff == 0 else "ERROR"
+    )
+    for item in raw_diff_rows:
+        add_check(
+            checks, f"diferencias_raw_vs_weekly_{item['variable']}",
+            item["diferencias"],
+            "OK" if item["diferencias"] == 0 else "ERROR"
+        )
 
     # D. Reconstrucción independiente del panel semanas 0-4.
     # La presencia de una fila estudiante-semana determina disponibilidad;
