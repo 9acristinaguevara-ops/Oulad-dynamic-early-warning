@@ -1,4 +1,4 @@
-"""Experimento 163: bootstrap pareado por estudiante de diferencias top-k.
+"""Experimento 164: intervalos simultaneos para diferencias F1 top-k.
 
 Reproduce la cohorte/modelos del experimento 162. Compara precision, recall y F1
 entre pares de modelos, con selección top-k determinista idéntica.
@@ -80,15 +80,16 @@ def metricas_ponderadas(y, alerta, pesos):
     return precision, recall, f1
 
 
-def resumen_bootstrap(diferencias):
+def resumen_bootstrap(diferencias, ajuste_familiar=False):
     a = np.asarray(diferencias, dtype=float)
     a = a[np.isfinite(a)]
     if len(a) == 0:
         return np.nan, np.nan, np.nan, np.nan, 0
+    alpha = ALPHA_AJUSTADO if ajuste_familiar else 0.05
     return (
         float(np.mean(a)),
-        float(np.quantile(a, ALPHA_AJUSTADO / 2)),
-        float(np.quantile(a, 1 - ALPHA_AJUSTADO / 2)),
+        float(np.quantile(a, alpha / 2)),
+        float(np.quantile(a, 1 - alpha / 2)),
         float(np.mean(a > 0)),
         len(a)
     )
@@ -204,7 +205,7 @@ def main():
                     ["precision", "recall", "f1"], metricas_a, metricas_b
                 ):
                     media, inferior, superior, prob_mayor_cero, n_validos = (
-                        resumen_bootstrap(diferencias[nombre_metrica])
+                        resumen_bootstrap(diferencias[nombre_metrica], ajuste_familiar=(nombre_metrica == 'f1'))
                     )
                     fila[f"{nombre_metrica}_a"] = valor_a
                     fila[f"{nombre_metrica}_b"] = valor_b
