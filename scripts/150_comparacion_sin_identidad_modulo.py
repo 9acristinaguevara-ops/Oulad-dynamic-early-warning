@@ -4,6 +4,8 @@ from pathlib import Path
 
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     roc_auc_score, f1_score, precision_score,
     recall_score, brier_score_loss
@@ -192,10 +194,13 @@ for nombre, variables in especificaciones.items():
         columns=x_train.columns, fill_value=0
     )
 
-    modelo = LogisticRegression(
-        max_iter=1000,
-        class_weight="balanced",
-        random_state=42
+    modelo = make_pipeline(
+        StandardScaler(),
+        LogisticRegression(
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=42
+        )
     )
     modelo.fit(x_train, y_train)
 
