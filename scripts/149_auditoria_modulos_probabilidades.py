@@ -171,7 +171,6 @@ def preparar(datos, numericas, incluir_modulo):
             categorias, prefix="modulo", dtype=int
         )
         dummies.index = datos.index
-        dummies["modulo_no_visto"] = desconocido.to_numpy()
         x = pd.concat([x, dummies], axis=1)
 
     return x
