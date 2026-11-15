@@ -137,6 +137,143 @@ def main():
                   "OK" if not frame.duplicated(key_cols).any() else "ERROR")
     save(pd.DataFrame(integrity), "142_integridad_archivos.csv")
 
+    # Reconstruir las variables de actividad de los scripts 23 y 25
+    # directamente desde weekly_activity y comprobarlas contra enriched.
+    activity_0_4 = weekly[weekly["week"].between(0, 4)].copy()
+
+    def pivot_activity(metric, prefix):
+        table = activity_0_4.pivot_table(
+            index=KEYS, columns="week", values=metric, aggfunc="sum"
+        ).reindex(columns=WEEKS)
+        table.columns = [f"{prefix}_{int(week)}" for week in WEEKS]
+        return table
+
+    clicks_wide = pivot_activity("weekly_clicks", "clics_semana")
+    days_wide = pivot_activity("active_days", "dias_semana")
+    records_wide = pivot_activity("activity_records", "registros_semana")
+    activity_features = clicks_wide.join(days_wide).join(records_wide).reset_index()
+
+    click_feature_cols = [f"clics_semana_{week}" for week in WEEKS]
+    day_feature_cols = [f"dias_semana_{week}" for week in WEEKS]
+
+    activity_features["semanas_con_actividad"] = (
+        activity_features[click_feature_cols].notna().sum(axis=1)
+    )
+    activity_features["clics_acumulados_0_4"] = (
+        activity_features[click_feature_cols].sum(axis=1, min_count=1)
+    )
+    activity_features["promedio_clics_0_4"] = (
+        activity_features[click_feature_cols].mean(axis=1)
+    )
+    activity_features["dias_activos_0_4"] = (
+        activity_features[day_feature_cols].sum(axis=1, min_count=1)
+    )
+    activity_features["clics_recientes_3_4"] = (
+        activity_features[["clics_semana_3", "clics_semana_4"]]
+        .sum(axis=1, min_count=1)
+    )
+    activity_features["clics_anteriores_0_2"] = (
+        activity_features[["clics_semana_0", "clics_semana_1",
+                           "clics_semana_2"]]
+        .sum(axis=1, min_count=1)
+    )
+
+    expected_enriched = corrected.merge(
+        activity_features, on=KEYS, how="left", validate="one_to_one"
+    )
+    require_columns(
+        enriched, expected_enriched.columns.tolist(),
+        "week4_enriched_features.parquet"
+    )
+    enriched_compare = expected_enriched.merge(
+        enriched, on=KEYS, how="outer",
+        suffixes=("_reconstruido", "_existente"),
+        indicator=True, validate="one_to_one"
+    )
+    enriched_rows = []
+    both_enriched = enriched_compare[enriched_compare["_merge"] == "both"]
+    for col in expected_enriched.columns:
+        if col in KEYS:
+            continue
+        left_values = both_enriched[f"{col}_reconstruido"]
+        right_values = both_enriched[f"{col}_existente"]
+        same = left_values.eq(right_values) | (
+            left_values.isna() & right_values.isna()
+        )
+        enriched_rows.append({
+            "variable": col,
+            "comparaciones": len(both_enriched),
+            "coincidencias": int(same.sum()),
+            "diferencias": int((~same).sum())
+        })
+    enriched_key_diff = int((enriched_compare["_merge"] != "both").sum())
+    save(pd.DataFrame(enriched_rows), "142_comparacion_features_enriquecidas.csv")
+    save(enriched_compare[enriched_compare["_merge"] != "both"],
+         "142_discrepancias_features_enriquecidas.csv")
+    add_check(
+        checks, "claves_features_enriquecidas_no_coincidentes",
+        enriched_key_diff,
+        "OK" if enriched_key_diff == 0 else "ERROR"
+    )
+    for item in enriched_rows:
+        add_check(
+            checks, f"diferencias_feature_enriquecida_{item['variable']}",
+            item["diferencias"],
+            "OK" if item["diferencias"] == 0 else "ERROR"
+        )
+
+    # Verificar específicamente las variables de semana 3 y 4 creadas en script 23.
+    direct_checks = [
+        ("week3_clicks", "clics_semana_3"),
+        ("week4_clicks", "clics_semana_4"),
+        ("week4_active_days", "dias_semana_4"),
+        ("week4_activity_records", "registros_semana_4")
+    ]
+    direct_rows = []
+    for model_col, weekly_col in direct_checks:
+        left_values = expected_enriched[model_col]
+        right_values = expected_enriched[weekly_col]
+        same = left_values.eq(right_values) | (
+            left_values.isna() & right_values.isna()
+        )
+        direct_rows.append({
+            "variable": model_col,
+            "fuente_semanal": weekly_col,
+            "coincidencias": int(same.sum()),
+            "diferencias": int((~same).sum())
+        })
+    expected_has_week4 = expected_enriched["registros_semana_4"].notna().astype(int)
+    same_has = expected_enriched["has_week4_activity"].eq(expected_has_week4)
+    direct_rows.append({
+        "variable": "has_week4_activity",
+        "fuente_semanal": "registros_semana_4.notna()",
+        "coincidencias": int(same_has.sum()),
+        "diferencias": int((~same_has).sum())
+    })
+    expected_change = (
+        expected_enriched["week4_clicks"] - expected_enriched["week3_clicks"]
+    )
+    expected_change = expected_change.mask(
+        expected_enriched["week3_clicks"].isna()
+        | expected_enriched["week4_clicks"].isna()
+    )
+    same_change = expected_enriched["weekly_change"].eq(expected_change) | (
+        expected_enriched["weekly_change"].isna() & expected_change.isna()
+    )
+    direct_rows.append({
+        "variable": "weekly_change",
+        "fuente_semanal": "week4_clicks - week3_clicks",
+        "coincidencias": int(same_change.sum()),
+        "diferencias": int((~same_change).sum())
+    })
+    save(pd.DataFrame(direct_rows), "142_comprobacion_features_predictivas.csv")
+    for item in direct_rows:
+        add_check(
+            checks, f"diferencias_feature_predictiva_{item['variable']}",
+            item["diferencias"],
+            "OK" if item["diferencias"] == 0 else "ERROR"
+        )
+
     # Reconstruir el merge del script 49 y comparar todas sus columnas.
     expected_combined = enriched.merge(
         assessment_features[KEYS + assessment_columns],
