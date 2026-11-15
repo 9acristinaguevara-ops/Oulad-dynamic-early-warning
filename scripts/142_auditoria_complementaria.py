@@ -14,6 +14,7 @@ from pathlib import Path
 import platform
 import pandas as pd
 import numpy as np
+import sklearn
 from sklearn.model_selection import train_test_split
 
 BASE = Path(__file__).resolve().parents[1]
@@ -546,6 +547,7 @@ def main():
         {"control": "python_version", "valor": platform.python_version()},
         {"control": "pandas_version", "valor": pd.__version__},
         {"control": "numpy_version", "valor": np.__version__},
+        {"control": "scikit_learn_version", "valor": sklearn.__version__},
     ]
     save(pd.DataFrame(summary), "142_resumen_ejecutivo.csv")
     save(pd.DataFrame(checks), "142_estado_controles.csv")
