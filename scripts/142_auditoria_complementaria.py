@@ -161,7 +161,7 @@ def main():
     non_banked = student_assessment[banked_flag == 0].copy()
 
     assessment_join = non_banked.merge(
-        assessments[["id_assessment", "date"]],
+        assessments[["id_assessment", "code_module", "code_presentation", "date"]],
         on="id_assessment", how="left",
         validate="many_to_one", indicator=True
     )
