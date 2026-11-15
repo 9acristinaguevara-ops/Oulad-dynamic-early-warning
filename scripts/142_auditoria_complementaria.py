@@ -142,6 +142,10 @@ def main():
         assessment_features[KEYS + assessment_columns],
         on=KEYS, how="left", validate="one_to_one"
     )
+    require_columns(
+        combined, expected_combined.columns.tolist(),
+        "week4_combined_features_v4.parquet"
+    )
     pipeline_compare = expected_combined.merge(
         combined,
         on=KEYS, how="outer", suffixes=("_reconstruido", "_existente"),
