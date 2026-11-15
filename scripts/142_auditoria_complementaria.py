@@ -189,10 +189,16 @@ def main():
                     margins=True).reset_index(),
         "142_target_por_resultado_final.csv"
     )
-    save(
-        eligible[(eligible["final_result"] == "Fail") &
-                 (eligible["target_rebuilt"] == 1)],
-        "142_casos_fail_con_retiro_futuro.csv"
+    fail_future = eligible[
+        (eligible["final_result"] == "Fail") &
+        (eligible["target_rebuilt"] == 1)
+    ].copy()
+    save(fail_future, "142_casos_fail_con_retiro_futuro.csv")
+    add_check(
+        checks, "registros_final_result_Fail_con_retiro_posterior",
+        len(fail_future),
+        "REVISAR DEFINICIÓN" if len(fail_future) else "OK",
+        "Estos casos reciben target=1 por fecha de baja > día 34 aunque final_result sea Fail."
     )
 
     date_summary = pd.DataFrame([
@@ -226,12 +232,14 @@ def main():
 
     # C. Validez de weekly_activity y sus magnitudes.
     weekly_checks = []
+    week_numeric = pd.to_numeric(weekly["week"], errors="coerce")
     numeric_rules = [
+        ("week_missing_or_not_numeric", week_numeric.isna()),
+        ("week_not_integer", week_numeric.notna() & (week_numeric % 1 != 0)),
         ("weekly_clicks_negative", weekly["weekly_clicks"] < 0),
         ("active_days_less_than_1", weekly["active_days"] < 1),
         ("active_days_greater_than_7", weekly["active_days"] > 7),
         ("activity_records_less_than_1", weekly["activity_records"] < 1),
-        ("week_not_integer", pd.to_numeric(weekly["week"], errors="coerce") % 1 != 0),
     ]
     for name, mask in numeric_rules:
         count = int(mask.fillna(False).sum())
