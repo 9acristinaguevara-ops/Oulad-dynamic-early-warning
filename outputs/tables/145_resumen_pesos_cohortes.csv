@@ -1,0 +1,6 @@
+cohorte,matriculas,estudiantes,suma_pesos,peso_minimo,peso_maximo,clase_1_matriculas,clase_1_ponderada
+entrenamiento,3975,3973,3973.0,0.5,1.0,650,648.5
+calibracion,3809,3808,3808.0,0.5,1.0,577,576.5
+seleccion_umbral,3811,3808,3808.0,0.5,1.0,578,577.0
+prueba_2014B,5778,5503,5503.0,0.5,1.0,1043,975.5
+prueba_2014J,7783,7479,7479.0,0.5,1.0,1268,1204.0

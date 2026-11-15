@@ -1,0 +1,13 @@
+﻿control,valor
+matriculas_elegibles_reconstruidas,27135
+matriculas_dataset_corregido,27135
+matriculas_dataset_combinado,27135
+target_0_reconstruido,22410
+target_1_reconstruido,4725
+filas_weekly_activity,627031
+filas_panel_reconstruido,27135
+duplicados_panel_reconstruido,0
+python_version,3.14.2
+pandas_version,3.1.1
+numpy_version,2.5.4
+scikit_learn_version,1.9.1

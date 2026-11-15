@@ -1,0 +1,9 @@
+﻿control,registros
+date_registration_missing,45
+date_registration_before_day_0,32312
+date_registration_after_day_0,234
+date_registration_after_day_34,15
+date_unregistration_missing,22521
+date_unregistration_equal_minus_1,147
+date_unregistration_le_day_34,5343
+date_unregistration_gt_day_34,4729

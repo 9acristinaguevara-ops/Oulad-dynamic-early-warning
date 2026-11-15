@@ -1,0 +1,4 @@
+﻿muestra,matriculas,retiros_futuros,sin_retiro_futuro,proporcion_retiro_futuro
+cohorte_actual_registration_le_34,27135,4725,22410,0.17412935323383086
+matricula_desde_dia_0_registration_ge_0,208,33,175,0.15865384615384615
+excluir_matricula_posterior_dia_0_registration_le_0,26929,4692,22237,0.17423595380444873

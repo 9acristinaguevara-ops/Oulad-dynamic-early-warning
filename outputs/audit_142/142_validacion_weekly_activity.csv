@@ -1,0 +1,12 @@
+﻿control,registros
+week_missing_or_not_numeric,0
+week_not_integer,0
+weekly_clicks_negative,0
+active_days_less_than_1,0
+active_days_greater_than_7,0
+activity_records_less_than_1,0
+weekly_clicks_missing,0
+active_days_missing,0
+activity_records_missing,0
+semanas_min,-4
+semanas_max,38

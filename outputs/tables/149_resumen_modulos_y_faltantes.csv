@@ -1,0 +1,6 @@
+cohorte,matriculas,estudiantes,modulos_presentes,modulos_no_vistos,matriculas_modulo_no_visto,porcentaje_modulo_no_visto,week3_clicks_faltantes,week4_clicks_faltantes,week4_active_days_faltantes,week4_activity_records_faltantes,has_week4_activity_faltantes,weekly_change_faltantes,clics_recientes_3_4_faltantes,evaluaciones_entregadas_34_faltantes,evaluaciones_programadas_34_faltantes
+entrenamiento,3975,3973,3,,0,0.0,611,796,796,796,0,1015,392,0,0
+calibracion,3809,3808,6,AAA;EEE;GGG,1086,28.51142032029404,860,889,889,889,0,1236,513,0,0
+seleccion_umbral,3811,3808,6,AAA;EEE;GGG,1120,29.388611912883754,898,895,895,895,0,1256,537,0,0
+prueba_2014B,5778,5503,6,CCC;EEE;GGG,2418,41.848390446521286,1306,1384,1384,1384,0,1891,799,0,0
+prueba_2014J,7783,7479,7,AAA;CCC;EEE;GGG,3187,40.948220480534495,1484,1477,1477,1477,0,2221,740,0,0

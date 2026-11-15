@@ -1,0 +1,7 @@
+﻿variable,fuente_semanal,coincidencias,diferencias
+week3_clicks,clics_semana_3,27135,0
+week4_clicks,clics_semana_4,27135,0
+week4_active_days,dias_semana_4,27135,0
+week4_activity_records,registros_semana_4,27135,0
+has_week4_activity,registros_semana_4.notna(),27135,0
+weekly_change,week4_clicks - week3_clicks,27135,0

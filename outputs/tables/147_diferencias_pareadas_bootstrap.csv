@@ -1,0 +1,21 @@
+periodo,ponderacion,diferencia,metrica,replicas_validas,diferencia_media,IC95_inferior,IC95_superior,probabilidad_diferencia_mayor_cero
+2014B,por_matricula,ponderado_estudiante - original_matricula,AUC,1000,-0.0011683855762370918,-0.0017115397662313154,-0.0006581894531544232,0.0
+2014B,por_matricula,ponderado_estudiante - original_matricula,F1,1000,-0.00214686494711068,-0.004095500136910661,-0.0002875531038620608,0.013
+2014B,por_matricula,ponderado_estudiante - original_matricula,precision,1000,-0.0020029873703658724,-0.0035277012536473326,-0.0005998935498944655,0.003
+2014B,por_matricula,ponderado_estudiante - original_matricula,recall,1000,-0.0009413981393903461,-0.003925998331794606,0.002762750369261166,0.18
+2014B,por_matricula,ponderado_estudiante - original_matricula,Brier,1000,4.3318570423244414e-05,2.7839884605772303e-05,5.8851136549460666e-05,1.0
+2014B,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,AUC,1000,-0.001072653024911344,-0.0016450886924169433,-0.0005668336567013489,0.0
+2014B,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,F1,1000,-0.0023190156174005177,-0.004380104814393155,-0.00030038922743674123,0.01
+2014B,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,precision,1000,-0.0021674130079341477,-0.003809611954272477,-0.0006854490257130233,0.004
+2014B,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,recall,1000,-0.0010060682349152486,-0.004184319710884757,0.002951412530682193,0.18
+2014B,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,Brier,1000,3.902467422966655e-05,2.4943161193099333e-05,5.33398094370259e-05,1.0
+2014J,por_matricula,ponderado_estudiante - original_matricula,AUC,1000,-0.0004047677162853681,-0.0008817637132382844,1.1489570377373683e-05,0.029
+2014J,por_matricula,ponderado_estudiante - original_matricula,F1,1000,0.0004961108551368897,-0.0013676836952707897,0.0024246970048005896,0.685
+2014J,por_matricula,ponderado_estudiante - original_matricula,precision,1000,0.0002250971621289439,-0.0010975164812477567,0.0015789846473245705,0.614
+2014J,por_matricula,ponderado_estudiante - original_matricula,recall,1000,0.0016340850004214898,-0.0016368293151978962,0.005380891396630413,0.737
+2014J,por_matricula,ponderado_estudiante - original_matricula,Brier,1000,2.609491217828708e-05,1.2833958099813664e-05,3.868957382286361e-05,1.0
+2014J,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,AUC,1000,-0.0003680815827281957,-0.0008291150338332693,3.769557456945735e-05,0.049
+2014J,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,F1,1000,0.00042011054894071847,-0.0015408651327165819,0.002489765605791844,0.646
+2014J,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,precision,1000,0.0001353337687823642,-0.0012128749337698135,0.0015721619436914356,0.556
+2014J,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,recall,1000,0.0017209870706324363,-0.0017353767474090286,0.005658909267788198,0.737
+2014J,igual_peso_por_estudiante,ponderado_estudiante - original_matricula,Brier,1000,2.2330684158768847e-05,9.676580508795329e-06,3.405754411529363e-05,1.0

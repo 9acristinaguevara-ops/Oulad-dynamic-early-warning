@@ -1,0 +1,4 @@
+modelo,variables_numericas,incluye_modulo,numero_predictores,umbral,F1_seleccion
+estudiante_solo,week3_clicks ; week4_clicks ; week4_active_days ; week4_activity_records ; has_week4_activity ; weekly_change ; clics_recientes_3_4 ; evaluaciones_entregadas_34,False,8,0.12,0.26401281171356666
+contexto_curso_solo,evaluaciones_programadas_34,True,4,0.1,0.2633857370699476
+combinado,week3_clicks ; week4_clicks ; week4_active_days ; week4_activity_records ; has_week4_activity ; weekly_change ; clics_recientes_3_4 ; evaluaciones_entregadas_34 ; evaluaciones_programadas_34,True,12,0.15,0.2822878228782288

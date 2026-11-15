@@ -1,0 +1,11 @@
+cohorte_a,cohorte_b,estudiantes_compartidos
+entrenamiento,calibracion,0
+entrenamiento,seleccion_umbral,0
+entrenamiento,prueba_2014B,0
+entrenamiento,prueba_2014J,0
+calibracion,seleccion_umbral,0
+calibracion,prueba_2014B,0
+calibracion,prueba_2014J,0
+seleccion_umbral,prueba_2014B,0
+seleccion_umbral,prueba_2014J,0
+prueba_2014B,prueba_2014J,0
