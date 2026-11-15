@@ -69,12 +69,14 @@ def main():
         "student_info": RAW / "studentInfo.csv",
         "weekly_activity": INTERIM / "weekly_activity.parquet",
         "corrected": INTERIM / "corrected_week4_final_dataset.parquet",
+        "enriched": INTERIM / "week4_enriched_features.parquet",
+        "assessment_features": INTERIM / "week4_assessment_features_v4.parquet",
         "combined": INTERIM / "week4_combined_features_v4.parquet",
         "panel": INTERIM / "weekly_panel_weeks0_4.parquet",
     }
 
     required = ["student_vle", "registration", "student_info", "weekly_activity",
-                "corrected", "combined"]
+                "corrected", "enriched", "assessment_features", "combined"]
     missing_files = [str(files[k]) for k in required if not files[k].exists()]
     if missing_files:
         raise FileNotFoundError(
@@ -86,6 +88,8 @@ def main():
     student_info = pd.read_csv(files["student_info"])
     weekly = pd.read_parquet(files["weekly_activity"])
     corrected = pd.read_parquet(files["corrected"])
+    enriched = pd.read_parquet(files["enriched"])
+    assessment_features = pd.read_parquet(files["assessment_features"])
     combined = pd.read_parquet(files["combined"])
 
     require_columns(registration, KEYS + ["date_registration", "date_unregistration"],
@@ -95,6 +99,18 @@ def main():
                                     "activity_records"], "weekly_activity.parquet")
     require_columns(corrected, KEYS + ["target_future_withdrawal"],
                     "corrected_week4_final_dataset.parquet")
+    require_columns(enriched, KEYS + ["target_future_withdrawal"],
+                    "week4_enriched_features.parquet")
+    assessment_columns = [
+        "evaluaciones_programadas_34",
+        "evaluaciones_entregadas_34",
+        "promedio_notas_34",
+        "evaluaciones_aprobadas_34",
+        "proporcion_entregadas_34",
+        "entregas_tempranas_totales"
+    ]
+    require_columns(assessment_features, KEYS + assessment_columns,
+                    "week4_assessment_features_v4.parquet")
     require_columns(combined, KEYS + ["target_future_withdrawal"],
                     "week4_combined_features_v4.parquet")
 
@@ -105,6 +121,8 @@ def main():
         ("student_info", student_info, KEYS),
         ("weekly_activity", weekly, KEYS + ["week"]),
         ("corrected", corrected, KEYS),
+        ("enriched", enriched, KEYS),
+        ("assessment_features", assessment_features, KEYS),
         ("combined", combined, KEYS),
     ]:
         integrity.append({
@@ -118,6 +136,49 @@ def main():
                   int(frame.duplicated(key_cols).sum()),
                   "OK" if not frame.duplicated(key_cols).any() else "ERROR")
     save(pd.DataFrame(integrity), "142_integridad_archivos.csv")
+
+    # Reconstruir el merge del script 49 y comparar todas sus columnas.
+    expected_combined = enriched.merge(
+        assessment_features[KEYS + assessment_columns],
+        on=KEYS, how="left", validate="one_to_one"
+    )
+    pipeline_compare = expected_combined.merge(
+        combined,
+        on=KEYS, how="outer", suffixes=("_reconstruido", "_existente"),
+        indicator=True, validate="one_to_one"
+    )
+    pipeline_rows = []
+    both_pipeline = pipeline_compare[pipeline_compare["_merge"] == "both"]
+    for col in expected_combined.columns:
+        if col in KEYS:
+            continue
+        left_col = f"{col}_reconstruido"
+        right_col = f"{col}_existente"
+        if left_col not in pipeline_compare.columns or right_col not in pipeline_compare.columns:
+            continue
+        left_values = both_pipeline[left_col]
+        right_values = both_pipeline[right_col]
+        same = left_values.eq(right_values) | (left_values.isna() & right_values.isna())
+        pipeline_rows.append({
+            "variable": col,
+            "comparaciones": len(both_pipeline),
+            "coincidencias": int(same.sum()),
+            "diferencias": int((~same).sum())
+        })
+    pipeline_key_diff = int((pipeline_compare["_merge"] != "both").sum())
+    save(pd.DataFrame(pipeline_rows), "142_comparacion_pipeline_v4.csv")
+    save(pipeline_compare[pipeline_compare["_merge"] != "both"],
+         "142_discrepancias_pipeline_v4.csv")
+    add_check(
+        checks, "claves_pipeline_v4_no_coincidentes", pipeline_key_diff,
+        "OK" if pipeline_key_diff == 0 else "ERROR"
+    )
+    for item in pipeline_rows:
+        add_check(
+            checks, f"diferencias_pipeline_v4_{item['variable']}",
+            item["diferencias"],
+            "OK" if item["diferencias"] == 0 else "ERROR"
+        )
 
     # A. Integridad de las claves de matrícula entre las dos fuentes originales.
     reg_keys = registration[KEYS].drop_duplicates()
