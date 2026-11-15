@@ -360,7 +360,73 @@ def main():
         })
     save(pd.DataFrame(coverage), "142_cobertura_panel_semanal.csv")
 
-    # E. Comparar panel reconstruido con el utilizado en los análisis 130-141.
+    # E. Reproducir los tamaños de muestra de los análisis longitudinales.
+    # Esto permite detectar si los filtros publicados cambian al reconstruir
+    # el panel desde los datos originales.
+    analysis_panel = rebuilt_panel.merge(
+        eligible[KEYS + ["date_registration"]],
+        on=KEYS, how="left", validate="one_to_one"
+    )
+    analysis_panel["semanas_observadas"] = (
+        analysis_panel[CLICK_COLS].notna().sum(axis=1)
+    )
+    analysis_panel["media_actividad"] = (
+        analysis_panel[CLICK_COLS].mean(axis=1)
+    )
+    analysis_panel["sd_actividad"] = (
+        analysis_panel[CLICK_COLS].std(axis=1, ddof=1)
+    )
+    analysis_panel["cv_actividad"] = (
+        analysis_panel["sd_actividad"] / analysis_panel["media_actividad"]
+    )
+
+    cv_sample = (
+        (analysis_panel["semanas_observadas"] >= 2)
+        & (analysis_panel["media_actividad"] > 0)
+        & analysis_panel["sd_actividad"].notna()
+        & analysis_panel["cv_actividad"].notna()
+    )
+    complete_sample = analysis_panel[CLICK_COLS].notna().all(axis=1)
+
+    sample_masks = {
+        "cohorte_completa": pd.Series(True, index=analysis_panel.index),
+        "muestra_CV_scripts_124_125_128_129": cv_sample,
+        "trayectorias_completas_scripts_131_132": complete_sample,
+        "matricula_posterior_dia_0": analysis_panel["date_registration"] > 0,
+        "matricula_hasta_dia_0": analysis_panel["date_registration"] <= 0,
+    }
+
+    sample_rows = []
+    for sample_name, mask in sample_masks.items():
+        subset = analysis_panel[mask]
+        for target_value in [0, 1]:
+            group = subset[subset["target_future_withdrawal"] == target_value]
+            sample_rows.append({
+                "muestra": sample_name,
+                "target": target_value,
+                "matriculas": len(group),
+                "proporcion_dentro_de_muestra": (
+                    len(group) / len(subset) if len(subset) else np.nan
+                ),
+                "media_semanas_observadas": (
+                    group["semanas_observadas"].mean() if len(group) else np.nan
+                )
+            })
+    save(pd.DataFrame(sample_rows), "142_reconstruccion_muestras_analiticas.csv")
+
+    add_check(
+        checks, "n_muestra_CV_esperado_24887", int(cv_sample.sum()),
+        "OK" if int(cv_sample.sum()) == 24887 else "REVISAR",
+        "El valor esperado procede de las tablas del experimento 124."
+    )
+    add_check(
+        checks, "n_trayectorias_completas_esperado_15317",
+        int(complete_sample.sum()),
+        "OK" if int(complete_sample.sum()) == 15317 else "REVISAR",
+        "El valor esperado procede de los experimentos 132 y 138."
+    )
+
+    # F. Comparar panel reconstruido con el utilizado en los análisis 130-141.
     if files["panel"].exists():
         old_panel = pd.read_parquet(files["panel"])
         require_columns(old_panel, KEYS + ["target_future_withdrawal"] +
@@ -405,7 +471,7 @@ def main():
         add_check(checks, "panel_existente_disponible", 0, "NO DISPONIBLE",
                   "No se encontró weekly_panel_weeks0_4.parquet; se reconstruyó desde sus fuentes.")
 
-    # F. Evaluaciones programadas: comprobar si es constante en cada grupo.
+    # G. Evaluaciones programadas: comprobar si es constante en cada grupo.
     if "evaluaciones_programadas_34" in combined.columns:
         course_context = (
             combined.groupby(["code_module", "code_presentation"])
@@ -419,7 +485,7 @@ def main():
         course_context["constante_en_grupo"] = course_context["valores_distintos"] == 1
         save(course_context, "142_constancia_evaluaciones_programadas.csv")
 
-    # G. Resumen reproducible y estado general.
+    # H. Resumen reproducible y estado general.
     summary = [
         {"control": "matriculas_elegibles_reconstruidas", "valor": len(eligible)},
         {"control": "matriculas_dataset_corregido", "valor": len(corrected)},
